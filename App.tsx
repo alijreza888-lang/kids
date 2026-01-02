@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CATEGORIES as INITIAL_CATEGORIES } from './constants';
 import { Category, GameType, GameState, Item } from './types';
 
-// فایل‌ها همه در root هستند
+// همه فایل‌ها در root هستند → بدون ./components یا ./services
 import { GameEngine } from './Games';
 import { generateSpeech, expandCategoryItems, generateItemImage } from './geminiService';
 import { playTTSSound, playLocalSpeech } from './audioPlayer';
