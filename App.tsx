@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CATEGORIES as INITIAL_CATEGORIES } from './constants';
 import { Category, GameType, GameState, Item } from './types';
 
-// همه فایل‌ها در root پروژه هستند – بدون هیچ فولدر services یا components
+// همه فایل‌ها در root پروژه هستند – بدون فولدر services یا components
 import { GameEngine } from './Games';
 import { generateSpeech, expandCategoryItems, generateItemImage } from './geminiService';
 import { playTTSSound, playLocalSpeech } from './audioPlayer';
@@ -22,7 +22,7 @@ const App: React.FC = () => {
 
   const [state, setState] = useState<GameState>({
     view: 'main',
-    selectedCategory: categories[0] || null,
+    selectedCategory: categories[0],
     selectedGame: null,
     score: 0,
   });
@@ -34,7 +34,7 @@ const App: React.FC = () => {
   const [isGeneratingImg, setIsGeneratingImg] = useState(false);
   const [itemImage, setItemImage] = useState<string | null>(null);
 
-  // سازگار با Cloudflare Pages
+  // سازگار با Cloudflare Pages و Vercel و همه پلتفرم‌ها
   const apiKey = import.meta.env.VITE_API_KEY || process.env.API_KEY;
   const aiActive = !!apiKey;
 
@@ -74,12 +74,12 @@ const App: React.FC = () => {
             speechPlayed = true;
           }
         } catch (e) {
-          console.warn("AI Speech failed, falling back to local.", e);
+          console.warn("AI Speech failed.");
         }
       }
       if (!speechPlayed) await playLocalSpeech(text);
     } catch (e) {
-      console.error("Speech error:", e);
+      console.error(e);
     } finally {
       setIsSpeaking(false);
     }
@@ -90,7 +90,6 @@ const App: React.FC = () => {
     const items = state.selectedCategory.items;
     const item = items[learningIndex] || items[0];
     if (!item) return;
-
     setIsGeneratingImg(true);
     try {
       const imgUrl = await generateItemImage(item.name, state.selectedCategory.name);
@@ -99,15 +98,14 @@ const App: React.FC = () => {
         setItemImage(imgUrl);
       }
     } catch (e) {
-      console.error("Image generation failed:", e);
-    } finally {
-      setIsGeneratingImg(false);
+      console.error(e);
     }
+    setIsGeneratingImg(false);
   };
 
   const goMain = () => {
     if (navigator.vibrate) navigator.vibrate(10);
-    setState({ ...state, view: 'main', selectedGame: null, selectedCategory: categories[0] || null });
+    setState({ ...state, view: 'main', selectedGame: null });
   };
 
   return (
@@ -132,15 +130,13 @@ const App: React.FC = () => {
                 <span className="text-[10px] font-bold uppercase opacity-80 mt-1 block">A to Z Room</span>
               </div>
             </button>
-
-            <button onClick={() => { if (navigator.vibrate) navigator.vibrate(25); setState({ ...state, view: 'learning_detail', selectedCategory: categories[0] || null }); }} className="w-full bg-[#6366F1] py-8 rounded-[2.5rem] shadow-card flex items-center px-8 active:scale-95 transition-all">
+            <button onClick={() => { if (navigator.vibrate) navigator.vibrate(25); setState({ ...state, view: 'learning_detail', selectedCategory: categories[0] }); }} className="w-full bg-[#6366F1] py-8 rounded-[2.5rem] shadow-card flex items-center px-8 active:scale-95 transition-all">
               <span className="text-6xl mr-5">🍎</span>
               <div className="text-left text-white">
                 <span className="block text-2xl font-kids uppercase leading-none">Words</span>
                 <span className="text-[10px] font-bold uppercase opacity-80 mt-1 block">Vocabulary</span>
               </div>
             </button>
-
             <button onClick={() => { if (navigator.vibrate) navigator.vibrate(25); setState({ ...state, view: 'game_types' }); }} className="w-full bg-[#FF7043] py-8 rounded-[2.5rem] shadow-card flex items-center px-8 active:scale-95 transition-all">
               <span className="text-6xl mr-5">🎮</span>
               <div className="text-left text-white">
@@ -148,7 +144,6 @@ const App: React.FC = () => {
                 <span className="text-[10px] font-bold uppercase opacity-80 mt-1 block">Play & Learn</span>
               </div>
             </button>
-
             <div className="h-10"></div>
           </div>
         </div>
@@ -186,97 +181,42 @@ const App: React.FC = () => {
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex overflow-x-auto hide-scrollbar px-5 py-4 space-x-4 bg-gray-50/50 flex-shrink-0">
               {categories.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => {
-                    setState({ ...state, selectedCategory: c });
-                    setLearningIndex(0);
-                    if (navigator.vibrate) navigator.vibrate(10);
-                  }}
-                  className="flex flex-col items-center flex-shrink-0"
-                >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-all ${state.selectedCategory?.id === c.id ? 'bg-[#FF9F1C] shadow-lg scale-110' : 'bg-white border shadow-sm opacity-60'}`}>
-                    {c.icon}
-                  </div>
+                <button key={c.id} onClick={() => { setState({ ...state, selectedCategory: c }); setLearningIndex(0); if (navigator.vibrate) navigator.vibrate(10); }} className="flex flex-col items-center flex-shrink-0">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-all ${state.selectedCategory?.id === c.id ? 'bg-[#FF9F1C] shadow-lg scale-110' : 'bg-white border shadow-sm opacity-60'}`}>{c.icon}</div>
                 </button>
               ))}
             </div>
-
             <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-0">
-              <div
-                onClick={() => { setShowPersian(!showPersian); if (navigator.vibrate) navigator.vibrate(10); }}
-                className={`w-full max-w-[280px] aspect-square rounded-[3rem] shadow-card flex flex-col items-center justify-center relative transition-all duration-300 active:scale-[0.97] cursor-pointer ${showPersian ? 'bg-indigo-600' : 'bg-white border-4 border-indigo-50'}`}
-              >
+              <div onClick={() => { setShowPersian(!showPersian); if (navigator.vibrate) navigator.vibrate(10); }} className={`w-full max-w-[280px] aspect-square rounded-[3rem] shadow-card flex flex-col items-center justify-center relative transition-all duration-300 active:scale-[0.97] cursor-pointer ${showPersian ? 'bg-indigo-600' : 'bg-white border-4 border-indigo-50'}`}>
                 {!showPersian ? (
                   <>
                     <div className="w-full h-full flex items-center justify-center p-6">
-                      {itemImage ? (
-                        <img src={itemImage} alt="item" className="w-full h-full object-contain rounded-[2rem] animate-in zoom-in" />
-                      ) : (
-                        <span className="text-[8rem] drop-shadow-xl">
-                          {state.selectedCategory.items[learningIndex]?.emoji}
-                        </span>
-                      )}
+                      {itemImage ? <img src={itemImage} alt="item" className="w-full h-full object-contain rounded-[2rem] animate-in zoom-in" /> : <span className="text-[8rem] drop-shadow-xl">{state.selectedCategory.items[learningIndex]?.emoji}</span>}
                     </div>
                     <div className="absolute bottom-4 w-full text-center">
-                      <span className="text-2xl font-kids text-indigo-700 bg-white/95 px-6 py-1.5 rounded-full shadow-sm">
-                        {state.selectedCategory.items[learningIndex]?.name}
-                      </span>
+                      <span className="text-2xl font-kids text-indigo-700 bg-white/95 px-6 py-1.5 rounded-full shadow-sm">{state.selectedCategory.items[learningIndex]?.name}</span>
                     </div>
                   </>
                 ) : (
                   <div className="text-center p-6 animate-in fade-in zoom-in">
-                    <h2 className="text-4xl font-kids text-white leading-tight" dir="rtl">
-                      {state.selectedCategory.items[learningIndex]?.persianName}
-                    </h2>
+                    <h2 className="text-4xl font-kids text-white leading-tight" dir="rtl">{state.selectedCategory.items[learningIndex]?.persianName}</h2>
                     <p className="mt-4 text-white/50 text-[10px] font-black uppercase tracking-widest">Tap to flip back</p>
                   </div>
                 )}
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSpeech(state.selectedCategory.items[learningIndex]?.name || "");
-                  }}
-                  className="absolute -top-2 -right-2 w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white active:scale-90 z-30"
-                >
+                <button onClick={(e) => { e.stopPropagation(); handleSpeech(state.selectedCategory?.items[learningIndex]?.name || ""); }} className="absolute -top-2 -right-2 w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white active:scale-90 z-30">
                   <span className="text-xl">🔊</span>
                 </button>
 
                 {aiActive && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleImageGeneration();
-                    }}
-                    className={`absolute -top-2 -left-2 w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white active:scale-90 z-30 ${isGeneratingImg ? 'animate-spin' : ''}`}
-                  >
+                  <button onClick={(e) => { e.stopPropagation(); handleImageGeneration(); }} className={`absolute -top-2 -left-2 w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white active:scale-90 z-30 ${isGeneratingImg ? 'animate-spin' : ''}`}>
                     <span className="text-xl">{isGeneratingImg ? '✨' : '🎨'}</span>
                   </button>
                 )}
               </div>
-
               <div className="flex w-full max-w-[280px] space-x-4 mt-8">
-                <button
-                  onClick={() => {
-                    setLearningIndex(p => (p > 0 ? p - 1 : state.selectedCategory!.items.length - 1));
-                    setShowPersian(false);
-                    if (navigator.vibrate) navigator.vibrate(10);
-                  }}
-                  className="flex-1 bg-gray-100 py-4 rounded-2xl font-black text-gray-400 uppercase text-xs tracking-widest active:bg-gray-200"
-                >
-                  Prev
-                </button>
-                <button
-                  onClick={() => {
-                    setLearningIndex(p => (p < state.selectedCategory!.items.length - 1 ? p + 1 : 0));
-                    setShowPersian(false);
-                    if (navigator.vibrate) navigator.vibrate(15);
-                  }}
-                  className="flex-1 bg-indigo-600 py-4 rounded-2xl font-black text-white shadow-lg uppercase text-xs tracking-widest active:scale-95"
-                >
-                  Next
-                </button>
+                <button onClick={() => { setLearningIndex(p => (p > 0 ? p - 1 : state.selectedCategory!.items.length - 1)); setShowPersian(false); if (navigator.vibrate) navigator.vibrate(10); }} className="flex-1 bg-gray-100 py-4 rounded-2xl font-black text-gray-400 uppercase text-xs tracking-widest active:bg-gray-200">Prev</button>
+                <button onClick={() => { setLearningIndex(p => (p < state.selectedCategory!.items.length - 1 ? p + 1 : 0)); setShowPersian(false); if (navigator.vibrate) navigator.vibrate(15); }} className="flex-1 bg-indigo-600 py-4 rounded-2xl font-black text-white shadow-lg uppercase text-xs tracking-widest active:scale-95">Next</button>
               </div>
             </div>
 
@@ -294,22 +234,16 @@ const App: React.FC = () => {
                           c.id === state.selectedCategory!.id ? { ...c, items: [...c.items, ...newItems] } : c
                         );
                         setCategories(updatedCats);
-                        setState(s => ({
-                          ...s,
-                          selectedCategory: updatedCats.find(c => c.id === s.selectedCategory?.id) || s.selectedCategory
-                        }));
+                        setState(s => ({ ...s, selectedCategory: updatedCats.find(c => c.id === s.selectedCategory?.id) || s.selectedCategory }));
                       }
-                    } catch (e) {
-                      console.error(e);
-                    } finally {
-                      setIsExpanding(false);
-                    }
+                    } catch (e) { console.error(e); }
+                    setIsExpanding(false);
                   }}
                   disabled={isExpanding || !aiActive}
                   className={`w-full py-4 rounded-3xl font-black uppercase text-xs tracking-tighter shadow-lg transition-all active:scale-95 flex items-center justify-center space-x-2 ${aiActive ? 'bg-[#22C55E] text-white' : 'bg-gray-100 text-gray-400'}`}
                 >
                   <span className="text-xl">{isExpanding ? '⏳' : '🪄'}</span>
-                  <span>{isExpanding ? 'Magic...' : 'Add 10 More Words'}</span>
+                  <span>{isExpanding ? 'Magic...' : `Add 10 More Words`}</span>
                 </button>
               </div>
             )}
@@ -325,17 +259,8 @@ const App: React.FC = () => {
           </div>
           <div className="flex-1 p-5 space-y-4 overflow-y-auto hide-scrollbar">
             {Object.values(GameType).map(type => (
-              <button
-                key={type}
-                onClick={() => {
-                  if (navigator.vibrate) navigator.vibrate(15);
-                  setState({ ...state, selectedGame: type, view: 'game_cats' });
-                }}
-                className="w-full flex items-center p-5 bg-white rounded-3xl border-2 border-indigo-50 shadow-soft active:border-indigo-400 transition-all active:scale-98"
-              >
-                <span className="text-4xl mr-4">
-                  {type === GameType.FLASHCARDS ? '🗂️' : type === GameType.QUIZ ? '❓' : type === GameType.MEMORY ? '🧠' : '🎮'}
-                </span>
+              <button key={type} onClick={() => { if (navigator.vibrate) navigator.vibrate(15); setState({ ...state, selectedGame: type, view: 'game_cats' }); }} className="w-full flex items-center p-5 bg-white rounded-3xl border-2 border-indigo-50 shadow-soft active:border-indigo-400 transition-all active:scale-98">
+                <span className="text-4xl mr-4">{type === GameType.FLASHCARDS ? '🗂️' : type === GameType.QUIZ ? '❓' : type === GameType.MEMORY ? '🧠' : '🎮'}</span>
                 <span className="text-lg font-kids text-indigo-700 uppercase">{type}</span>
               </button>
             ))}
@@ -351,14 +276,7 @@ const App: React.FC = () => {
           </div>
           <div className="flex-1 p-4 grid grid-cols-2 gap-4 overflow-y-auto hide-scrollbar">
             {categories.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  if (navigator.vibrate) navigator.vibrate(15);
-                  setState({ ...state, selectedCategory: cat, view: 'game_active' });
-                }}
-                className={`${cat.color} p-6 rounded-[2.5rem] shadow-lg flex flex-col items-center justify-center active:scale-95 transition-all text-white space-y-1`}
-              >
+              <button key={cat.id} onClick={() => { if (navigator.vibrate) navigator.vibrate(15); setState({ ...state, selectedCategory: cat, view: 'game_active' }); }} className={`${cat.color} p-6 rounded-[2.5rem] shadow-lg flex flex-col items-center justify-center active:scale-95 transition-all text-white space-y-1`}>
                 <span className="text-4xl drop-shadow-md">{cat.icon}</span>
                 <span className="text-[10px] font-black uppercase tracking-widest">{cat.name}</span>
               </button>
@@ -369,11 +287,7 @@ const App: React.FC = () => {
       )}
 
       {state.view === 'game_active' && state.selectedCategory && state.selectedGame && (
-        <GameEngine
-          category={state.selectedCategory}
-          gameType={state.selectedGame}
-          onBack={() => setState({ ...state, view: 'game_types' })}
-        />
+        <GameEngine category={state.selectedCategory} gameType={state.selectedGame} onBack={() => setState({ ...state, view: 'game_types' })} />
       )}
     </div>
   );
