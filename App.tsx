@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CATEGORIES as INITIAL_CATEGORIES } from './constants';
 import { Category, GameType, GameState, Item } from './types';
 
-// همه فایل‌ها در root هستند → بدون ./components یا ./services
+// همه فایل‌ها در root پروژه هستند – بدون هیچ فولدر services یا components
 import { GameEngine } from './Games';
 import { generateSpeech, expandCategoryItems, generateItemImage } from './geminiService';
 import { playTTSSound, playLocalSpeech } from './audioPlayer';
@@ -34,7 +34,7 @@ const App: React.FC = () => {
   const [isGeneratingImg, setIsGeneratingImg] = useState(false);
   const [itemImage, setItemImage] = useState<string | null>(null);
 
-  // سازگار با Cloudflare Pages و سایر پلتفرم‌ها
+  // سازگار با Cloudflare Pages
   const apiKey = import.meta.env.VITE_API_KEY || process.env.API_KEY;
   const aiActive = !!apiKey;
 
@@ -112,7 +112,6 @@ const App: React.FC = () => {
 
   return (
     <div className="w-full h-full max-w-md mx-auto relative overflow-hidden bg-white selection:bg-none flex flex-col">
-      {/* Main Menu */}
       {state.view === 'main' && (
         <div className="flex-1 flex flex-col p-0 animate-in fade-in duration-500 bg-white overflow-hidden">
           <div className="bg-[#FFD233] pt-12 pb-10 px-6 rounded-b-[4rem] shadow-lg flex flex-col items-center relative flex-shrink-0 z-10">
@@ -155,7 +154,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Alphabet View */}
       {state.view === 'alphabet' && (
         <div className="flex-1 bg-white flex flex-col animate-in slide-in-from-bottom duration-500 overflow-hidden">
           <div className="bg-[#22C55E] pt-12 pb-5 px-6 rounded-b-[3rem] shadow-md flex flex-col items-center relative flex-shrink-0 z-10">
@@ -178,7 +176,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Learning Detail View */}
       {state.view === 'learning_detail' && state.selectedCategory && (
         <div className="flex-1 flex flex-col bg-white overflow-hidden">
           <div className="bg-[#FFD233] pt-10 pb-4 px-6 rounded-b-[2.5rem] shadow-md flex flex-col items-center relative z-20 flex-shrink-0">
@@ -320,7 +317,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Game Types */}
       {state.view === 'game_types' && (
         <div className="flex-1 bg-white flex flex-col overflow-hidden">
           <div className="bg-[#FFD233] pt-12 pb-5 px-6 rounded-b-[2.5rem] shadow-md flex flex-col items-center relative z-10">
@@ -347,7 +343,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Game Categories */}
       {state.view === 'game_cats' && (
         <div className="flex-1 bg-white flex flex-col overflow-hidden">
           <div className="bg-[#FFD233] pt-12 pb-5 px-6 rounded-b-[2.5rem] shadow-md flex flex-col items-center relative z-10">
@@ -373,7 +368,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Active Game */}
       {state.view === 'game_active' && state.selectedCategory && state.selectedGame && (
         <GameEngine
           category={state.selectedCategory}
