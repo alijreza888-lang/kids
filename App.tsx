@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CATEGORIES as INITIAL_CATEGORIES } from './constants';
 import { Category, GameType, GameState, Item } from './types';
-import { GameEngine } from './components/Games';
+import { GameEngine } from './Games';
 import { generateSpeech, expandCategoryItems, generateItemImage } from './services/geminiService';
 import { playTTSSound, playLocalSpeech } from './services/audioPlayer';
 import { imageStorage } from './services/storage';
